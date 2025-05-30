@@ -1,4 +1,0 @@
-Django>=4.2,<5.0
-python-decouple
-psycopg2-binary  # o mysqlclient si usas MySQL
-django-environ
