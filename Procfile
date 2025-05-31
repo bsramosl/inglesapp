@@ -1,0 +1,1 @@
+web: gunicorn config.wsgi --workers 4 --timeout 120
