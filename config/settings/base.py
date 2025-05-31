@@ -7,6 +7,8 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 
+ROOT_URLCONF = 'config.urls'
+
 # Validación explícita para producción
 if not DEBUG and not any(ALLOWED_HOSTS):
     raise ValueError("¡ALLOWED_HOSTS debe estar configurado en producción!")
