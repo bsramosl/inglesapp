@@ -1,0 +1,32 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="Eslint" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="18">
+            <item index="0" class="java.lang.String" itemvalue="qrcode" />
+            <item index="1" class="java.lang.String" itemvalue="PyAutoGUI" />
+            <item index="2" class="java.lang.String" itemvalue="pywhatkit" />
+            <item index="3" class="java.lang.String" itemvalue="pyperclip" />
+            <item index="4" class="java.lang.String" itemvalue="pytweening" />
+            <item index="5" class="java.lang.String" itemvalue="aspose-cells" />
+            <item index="6" class="java.lang.String" itemvalue="arabic-reshaper" />
+            <item index="7" class="java.lang.String" itemvalue="MouseInfo" />
+            <item index="8" class="java.lang.String" itemvalue="zopfli" />
+            <item index="9" class="java.lang.String" itemvalue="curlify" />
+            <item index="10" class="java.lang.String" itemvalue="facebook_business" />
+            <item index="11" class="java.lang.String" itemvalue="wikipedia" />
+            <item index="12" class="java.lang.String" itemvalue="barcode" />
+            <item index="13" class="java.lang.String" itemvalue="PyGetWindow" />
+            <item index="14" class="java.lang.String" itemvalue="PyRect" />
+            <item index="15" class="java.lang.String" itemvalue="itsdangerous" />
+            <item index="16" class="java.lang.String" itemvalue="click" />
+            <item index="17" class="java.lang.String" itemvalue="Jinja2" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

@@ -1,8 +1,32 @@
+from django.contrib.auth.models import User
 from django.db import models
+from core.models import Module
+from utils.model_base import ModelBase
+from django.db import models
+from django.contrib.auth import get_user_model
 
-from apps.core.models import Module
-from apps.core.models.models import  ModelBase
-from django.contrib.auth.models import User, Group
+
+class LoginAttempt(models.Model):
+    class Status(models.TextChoices):
+        SUCCESS = 'success', 'Éxito'
+        FAILED = 'failed', 'Fallido'
+
+    username = models.CharField(max_length=255)
+    user = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
+    ip_address = models.CharField(max_length=45)
+    user_agent = models.TextField(blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10, choices=Status.choices)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['username']),
+            models.Index(fields=['ip_address']),
+            models.Index(fields=['timestamp']),
+        ]
+
+    def __str__(self):
+        return f"{self.username} - {self.status} - {self.timestamp}"
 
 
 class People(ModelBase):
