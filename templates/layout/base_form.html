@@ -1,0 +1,99 @@
+<script type="text/javascript">
+    $(function () {
+        {% block javascript %}
+            $('#{{ frmName|default:"formDinamico" }}').on('submit', function (e) {
+                e.preventDefault();
+                bloqueointerface()
+                const $form = $(this);
+                const formData = new FormData(this);
+                $.ajax({
+                    type: "POST",
+                    url: window.location.pathname,
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        $.unblockUI();
+                        if (response.result) {
+                            mensajeSuccess(response.message);
+                            location.reload()
+                        } else {
+                            mensajeWarning(response.message || 'There was an issue saving the module.');
+                        }
+                    },
+                    error: function () {
+                        $.unblockUI();
+                        mensajeDanger('Unexpected error occurred while saving.');
+                    }
+                });
+            });
+        {% endblock %}
+    });
+</script>
+
+{% block extraheading %}{% endblock %}
+
+<form id="{% block idformulario %}formulario{% endblock %}" {% block formtagextra %}{% endblock %} role="form"
+      class="row g-3 align-items-center" action="javascript:;">
+    {% block formextra %}{% endblock %}
+
+    {% for field in form %}
+        {% with attrs=field.field.widget.attrs %}
+            <div idn="{{ field.name }}" class="form-group col-md-{{ attrs.col|default:'12' }} p-2">
+                {% if attrs.form_checkbox %}
+                    <div class="form-check m-0">
+                        {{ field }}
+                        <label class="form-check-label fw-bold" for="id_{{ field.name }}">{{ field.label }}</label>
+                        {% if attrs.form_help_block %}
+                            <small class="form-text text-muted">{{ attrs.form_help_block }}</small>
+                        {% endif %}
+                    </div>
+                {% elif attrs.fieldButton %}
+                    <label class="form-label fw-bold" for="id_{{ field.name }}">{{ field.label }}</label>
+                    <div class="input-group m-0">
+                        {% if attrs.fieldButton.position == 'left' %}
+                            <button id="{{ attrs.fieldButton.id }}" type="button"
+                                    class="btn {{ attrs.fieldButton.button.class|default:'btn-secondary' }}">
+                                {% if attrs.fieldButton.button.icon %}
+                                    <i class="align-middle {{ attrs.fieldButton.button.icon }} me-1"></i>
+                                {% endif %}
+                                {{ attrs.fieldButton.button.text|default:'' }}
+                            </button>
+                            {{ field }}
+                        {% else %}
+                            {{ field }}
+                            <button id="{{ attrs.fieldButton.id }}" type="button"
+                                    class="btn {{ attrs.fieldButton.button.class|default:'btn-secondary' }}">
+                                {% if attrs.fieldButton.button.icon %}
+                                    <i class="align-middle {{ attrs.fieldButton.button.icon }} me-1"></i>
+                                {% endif %}
+                                {{ attrs.fieldButton.button.text|default:'' }}
+                            </button>
+                        {% endif %}
+                        {% if attrs.form_help_block %}
+                            <span class="font-13 text-muted">{{ attrs.form_help_block }}</span>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <label class="form-label fw-bold" for="id_{{ field.name }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if attrs.form_help_block %}
+                        <span class="font-13 text-muted">{{ attrs.form_help_block }}</span>
+                    {% endif %}
+                {% endif %}
+                <div id="feedback_{{ field.name }}" class="msg-feedback valid-feedback">¡Se ve bien!</div>
+            </div>
+        {% endwith %}
+    {% endfor %}
+
+    {% block formsuffix %}
+        <div class="col-12 d-flex justify-content-end gap-2 p-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="fa fa-save me-1"></i> Save
+            </button>
+            <button type="button" class="btn btn-secondary"  data-bs-dismiss="modal">
+                <i class="fa fa-times me-1"></i> Cancel
+            </button>
+        </div>
+    {% endblock %}
+</form>

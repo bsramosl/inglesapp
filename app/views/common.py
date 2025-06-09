@@ -5,20 +5,22 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.http import JsonResponse
 from django.conf import settings
-from core.models import MultiAppToken
-from .services import AuthService
-from core.services.user_services import UserService
 from django.core.cache import caches
-cache = caches['default']
 
+from app.models import MultiAppToken
+from helpers.decorators import add_data
+from services.auth import AuthService
+
+cache = caches['default']
 
 class HybridLoginView(TemplateView):
     template_name = 'users/login.html'
 
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect(settings.LOGIN_REDIRECT_URL)
         return super().dispatch(request, *args, **kwargs)
-
 
     def post(self, request):
         username = request.POST.get('username')
@@ -28,32 +30,35 @@ class HybridLoginView(TemplateView):
         if AuthService.is_login_blocked(username, ip_address):
             return self.render_error(request, 'Demasiados intentos. Espere 15 minutos.', status=429)
 
-        user = authenticate(request, username=username, password=password)
-
-        if user is not None and user.is_active:
-            token = AuthService.record_successful_login(user, ip_address)
+        try:
+            user, persona, token = AuthService.validate_user_credentials(username, password, ip_address)
             auth_login(request, user)
-            return self.handle_success_response(request, user, token)
+            return self.handle_success_response(request, persona, token)
+        except Exception as ex:
+            AuthService.record_failed_login(username, ip_address)
+            return self.render_error(request, str(ex), status=400)
 
-        AuthService.record_failed_login(username, ip_address)
-        return self.render_error(request, 'Credenciales inválidas', status=401)
 
-    def handle_success_response(self, request, user, token):
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            user_profile = UserService.get_user_profile(user)
-            request.session['user_profile'] = user_profile
-            return JsonResponse({
-                'status': 'success',
-                'token': token.key,
-                'expires': token.expires.isoformat(),
-                'session_id': request.session.session_key,
-                'url_redirect': settings.LOGIN_REDIRECT_URL
-            })
-        return redirect(request.POST.get('next', settings.LOGIN_REDIRECT_URL))
+
+    def handle_success_response(self, request, persona,token):
+        try:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                perfiles = persona.my_profiles()
+                perfilprincipal = persona.main_profile()
+                request.session.set_expiry(240 * 60)
+                request.session['profiles'] = perfiles
+                request.session['person'] = persona
+                request.session['profilemain'] = perfilprincipal
+                # request.session['companybranchmain'] = perfilprincipal.profile.my_company_branches()[0]
+                url_redirect = request.POST.get('next', 'home/')
+                return JsonResponse({'result': 'success','session_id': request.session.session_key,'token': token.key,'expires': token.expires.isoformat(),'url_redirect': url_redirect})
+            return self.render_error(request, 'Credenciales inválidas', status=401)
+        except Exception as ex:
+            return JsonResponse({'result': False,'message': str(ex)})
 
     def render_error(self, request, message, status=400):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'status': 'error', 'message': message}, status=status)
+            return JsonResponse({'result': False, 'message': message})
         return render(request, self.template_name, {'error': message})
 
 
@@ -80,6 +85,7 @@ class HybridLogoutView(TemplateView):
         return redirect(settings.LOGOUT_REDIRECT_URL)
 
 
+
 class HomeView(TemplateView):
     template_name = 'index.html'
 
@@ -90,5 +96,6 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        add_data(self.request, context)
         context['active_sessions'] = AuthService.get_active_sessions(self.request.user.id)
         return context

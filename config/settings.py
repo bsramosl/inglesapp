@@ -10,24 +10,25 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
-from decouple import config, Csv
+from pathlib import Path
 import django
-
-from core.base import MY_SECRET_KEY, MY_INSTALLED_APPS
+from core.base import MY_SECRET_KEY, MY_INSTALLED_APPS, MY_SIMPLE_JWT, MY_REST_FRAMEWORK, TITLE_SYSTEM
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE_ROOT = os.path.dirname(os.path.realpath("settings.py"))
-
 DJANGO_ROOT = os.path.dirname(os.path.realpath(django.__file__))
 
-SECRET_KEY = MY_SECRET_KEY
-
+ADMINISTRATOR_ID = 1
+TOKEN_DEFAULT_APP_NAME = TITLE_SYSTEM
+LOGIN_ATTEMPTS_TIMEOUT = 15 * 60
+TOKEN_DEFAULT_EXPIRY_DAYS = 30
+MAX_LOGIN_ATTEMPTS = 5
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-
+# SECURITY WARNING: keep the secret key used in production secret
+SECRET_KEY = MY_SECRET_KEY
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -44,7 +45,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     *MY_INSTALLED_APPS
-
 ]
 
 MIDDLEWARE = [
@@ -59,6 +59,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
+REST_FRAMEWORK = MY_REST_FRAMEWORK
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -82,13 +83,13 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
+     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST':config('DB_HOST'),
-        'PORT': config('DB_PORT'),
+        'NAME': 'postgres',
+        'USER': 'postgres.xlgqipxwupvvfwmifnlf',
+        'PASSWORD': '30Abril98@',
+        'HOST':'aws-0-us-east-2.pooler.supabase.com',
+        'PORT': '6543',
     }
 }
 
@@ -112,63 +113,25 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Security
-MAX_LOGIN_ATTEMPTS = 5
-LOGIN_ATTEMPTS_TIMEOUT = 900  # 15 minutes
-VALIDATE_SESSION_IP = True
-TOKEN_DEFAULT_EXPIRY_DAYS = 30
-TOKEN_DEFAULT_APP_NAME = 'web_app'
-
-# Sessions
-SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
-SESSION_COOKIE_AGE = 86400  # 1 day in seconds
-SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_SECURE = True
-
-# cache
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "COMPRESSOR": "django_redis.compressors.zlib.ZlibCompressor",
-            "SERIALIZER": "django_redis.serializers.json.JSONSerializer",
-            "PICKLE_VERSION": -1,  # Usa la última versión de pickle
-            "IGNORE_EXCEPTIONS": True,  # Ignora excepciones de Redis (para alta disponibilidad)
-        },
-        "KEY_PREFIX": "ecommerce",
-        "TIMEOUT": 86400,  # 1 día en segundos
-    },
-    "sessions": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/2",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    }
-}
-
-# Usar Redis para sesiones
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = "sessions"
-
-# Configuración de conexión persistente
-DJANGO_REDIS_CONNECTION_FACTORY = "django_redis.pool.ConnectionFactory"
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-EC'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Guayaquil'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_L10N = True
+
+USE_TZ = False
+
+DECIMAL_SEPARATOR = '.'
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/4.2/howto/static-files/
+
 
 MEDIA_ROOT = os.path.join(SITE_ROOT, 'media')
 
@@ -176,20 +139,55 @@ MEDIA_URL = '/media/'
 
 SITE_STORAGE = BASE_DIR
 
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
 STATIC_ROOT = ''
 
 STATIC_URL = '/static/'
+
 STATICFILES_DIRS = (os.path.join(SITE_ROOT, 'static'),)
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
 
 
+USER_AGENTS_CACHE = 'default'
+
+
+SERVER_RESPONSE = '211'
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
+
+
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_CREDENTIALS = True
+
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+SIMPLE_JWT = MY_SIMPLE_JWT
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'

@@ -86,7 +86,7 @@ function alertaSuccess(mensaje, time = 5000) {
     Swal.fire({
         toast: true,
         position: 'top-end',
-        type: 'success',
+        icon: 'success',
         title: mensaje,
         showConfirmButton: false,
         timer: time
@@ -97,7 +97,7 @@ function alertaWarning(mensaje, time = 5000) {
     Swal.fire({
         toast: true,
         position: 'top-end',
-        type: 'warning',
+        icon: 'warning',
         title: mensaje,
         showConfirmButton: false,
         timer: time
@@ -108,7 +108,7 @@ function alertaDanger(mensaje, time = 5000) {
     Swal.fire({
         toast: true,
         position: 'top-end',
-        type: 'error',
+        icon: 'error',
         title: mensaje,
         showConfirmButton: false,
         timer: time
@@ -119,7 +119,7 @@ function alertaInfo(mensaje, time = 5000) {
     Swal.fire({
         toast: true,
         position: 'top-end',
-        type: 'info',
+        icon: 'info',
         title: mensaje,
         showConfirmButton: false,
         timer: time
@@ -128,17 +128,17 @@ function alertaInfo(mensaje, time = 5000) {
 
 <!----------------- FUNCIONES AJAX -------------------->
 
-function eliminarajax(pk, nombre, accion, url = '{{ request.path }}', titulo = 'Estás por eliminar este registro:') {
+function eliminarajax(pk, nombre, accion, url = '{{ request.path }}', titulo = 'You are about to delete this record:') {
     Swal.fire({
         icon: 'question',
         title: `${titulo}`,
-        html: `<b>${titulo}</b> ${nombre}<br><small>Esta acción es irreversible</small>`,
+        html: `<b>${titulo}</b> ${nombre}<br><small>This action is irreversible</small>`,
         showCancelButton: true,
         allowOutsideClick: false,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, deseo hacerlo',
-        cancelButtonText: 'Cancelar'
+        confirmButtonText: 'Yes, I wish to do so\n',
+        cancelButtonText: 'Cancel'
     }).then((result) => {
         if (result.isConfirmed) {
             bloqueointerface();
@@ -169,7 +169,7 @@ function eliminarajax(pk, nombre, accion, url = '{{ request.path }}', titulo = '
                 }
             }).fail(function () {
                 setTimeout($.unblockUI, 1);
-                mensajeWarning('Error en el servidor', 'Advertencia!', 10000);
+                mensajeWarning('Server Error', 'Warning!', 10000);
             });
         }
     });

@@ -1,0 +1,8 @@
+{% extends "layout/base_form.html" %}
+{% block idformulario %}{% if frmName %}{{ frmName }}{% else %}formDinamico{% endif %}{% endblock %}
+{% block extraheading %}
+{% endblock %}
+{% block formextra %}
+    <input type="hidden" name="id" value="{% if id %}{{ id }}{% else %}0{% endif %}">
+    <input type="hidden" name="action" value="{{ action }}">
+{% endblock %}

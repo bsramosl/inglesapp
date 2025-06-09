@@ -1,0 +1,88 @@
+{% extends "layout/base.html" %}
+{% block heading %}
+{% endblock %}
+{% block tittle %}{{ tittle }}{% endblock %}
+{% block atras %}{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <!-- Tabla -->
+        <div class="card">
+            <div class="card-body">
+                <table id="scroll-vertical-datatable" class="table table-bordered table-hover table-striped w-100">
+                <div class="card-header border-bottom">
+                    <a onclick="formModalBase('','Add Module','create')"
+                        class="btn btn-success float-end mt-n1 action-add"><i class="align-middle fa fa-plus"></i> Add</a>
+                    <h5 class="h5 fw-bold">{{ title_table}}</h5>
+                </div>
+                    <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Name Key</th>
+                        <th>Description</th>
+                        <th>Visible</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for lists in list %}
+                        <tr>
+                            <td>{{ lists.id }}</td>
+                            <td>{{ lists.name }}</td>
+                            <td>{{ lists.name_key }}</td>
+                            <td>{{ lists.description }}</td>
+                            <td>
+                                {% if lists.is_active %}
+                                    <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-danger">No</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a class="btn btn-soft-primary waves-effect waves-light"
+                                        onclick="formModalBase( {{ lists.id }},'Edit Rol','edit')"><i class="fa fa-edit"></i>
+                                </a>
+                                <a class="btn btn-soft-danger waves-effect waves-light"
+                                        onclick="eliminarajax('{{ lists.id }}', '{{ module.name }}', 'del', '','Delete')">
+                                    <i class="fa fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="moduleModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" id="module-modal-content"></div>
+        </div>
+    </div>
+
+    <script>
+        function openModuleModal(action, id = null) {
+            bloqueointerface();
+             $.ajax({
+                type: "GET",
+                url: "'/system_rol/'",
+                data: {'action':action,'id':id},
+                success: function (data) {
+                    if (data.result == 'success') {
+                        $(".modal-body", $("#modalVerDetalleCostosNivel")).html(data.html);
+                        $("#modalVerDetalleCostosNivel").modal({backdrop:'static', width: '90%'}).modal('show');
+                    } else {
+                        alertaWarning(data.message)
+                        $.unblockUI();
+                    }
+                },
+                error: function () {
+                    $.unblockUI();
+                    mensajeWarning('No se pudo conectar con el servidor. Intente de nuevo más tarde.')
+                },
+                dataType: "json",
+            });
+        }
+    </script>
+{% endblock %}
