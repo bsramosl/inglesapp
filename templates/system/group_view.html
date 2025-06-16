@@ -1,0 +1,77 @@
+{% extends "layout/base.html" %}
+
+{% block heading %}{% endblock %}
+{% block title %}{{ title }}{% endblock %}
+{% block atras %}{% endblock %}
+{% block content %}
+    <div class="container-fluid">
+        <div class="card">
+            <!-- Cabecera del card -->
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">{{ title_table }}</h5>
+                <div>
+                    <button onclick="formModalBase('', 'Add Group', 'create_group')"
+                            class="btn btn-info action-add">
+                        <i class="fa fa-plus me-1"></i> Add Group
+                    </button>
+                    <button onclick="formModalBase('', 'Add Group', 'create')"
+                            class="btn btn-success action-add">
+                        <i class="fa fa-plus me-1"></i> Add Access Group
+                    </button>
+                </div>
+
+
+            </div>
+
+            <!-- Cuerpo con la tabla -->
+            <div class="card-body">
+                <table id="example" class="table table-bordered table-hover table-striped w-100">
+                    <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Group</th>
+                        <th>Description</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for access in list %}
+                        <tr>
+                            <td class="text-center">{{ access.group.id }}</td>
+                            <td class="text-center">{{ access.group.name }}</td>
+                            <td class="text-center">
+                                {% for groups in access.groups %}
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span>{{ groups.description|default:"—" }}</span>
+                                        <div class="btn-group" role="group">
+                                            <button type="button"
+                                                    class="btn btn-outline-primary btn-sm"
+                                                    onclick="formModalBase('{{ groups.group_id }}', 'Edit Access Group', 'edit')">
+                                                <i class="fa fa-edit"></i>
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-outline-danger btn-sm"
+                                                    onclick="eliminarajax('{{ groups.group_id }}', 'Delete Access Group', 'del_module', '', 'Delete')">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <span class="text-muted">—</span>
+                                {% endfor %}
+                            </td>
+
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="moduleModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" id="module-modal-content"></div>
+        </div>
+    </div>
+{% endblock %}

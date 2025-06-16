@@ -1,20 +1,23 @@
 {% extends "layout/base.html" %}
-{% block heading %}
-{% endblock %}
-{% block tittle %}{{ tittle }}{% endblock %}
-{% block atras %}{% endblock %}
 
+{% block heading %}{% endblock %}
+{% block title %}{{ title }}{% endblock %}
+{% block atras %}{% endblock %}
 {% block content %}
     <div class="container-fluid">
-        <!-- Tabla -->
         <div class="card">
+            <!-- Cabecera del card -->
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">{{ title_table }}</h5>
+                <button onclick="formModalBase('', 'Add Module', 'create_module')"
+                        class="btn btn-success action-add">
+                    <i class="fa fa-plus me-1"></i> Add
+                </button>
+            </div>
+
+            <!-- Cuerpo con la tabla -->
             <div class="card-body">
-                <table id="scroll-vertical-datatable" class="table table-bordered table-hover table-striped w-100">
-                <div class="card-header border-bottom">
-                    <a onclick="formModalBase('','Add Module','create_module')"
-                        class="btn btn-success float-end mt-n1 action-add"><i class="align-middle fa fa-plus"></i> Add</a>
-                    <h5 class="h5 fw-bold">{{ title_table}}</h5>
-                </div>
+                <table id="example" class="table table-bordered table-hover table-striped w-100">
                     <thead class="table-light">
                     <tr>
                         <th>ID</th>
@@ -42,13 +45,14 @@
                                 {% endif %}
                             </td>
                             <td class="text-end">
-                                <a class="btn btn-soft-primary waves-effect waves-light"
-                                        onclick="formModalBase( {{ module.id }},'Editar Modulo','edit_module')"><i class="fa fa-edit"></i>
-                                </a>
-                                <a class="btn btn-soft-danger waves-effect waves-light"
-                                        onclick="eliminarajax('{{ module.id }}', '{{ module.name }}', 'del_module', '','Delete')">
+                                <button class="btn btn-outline-primary btn-sm"
+                                        onclick="formModalBase({{ module.id }}, 'Editar Módulo', 'edit_module')">
+                                    <i class="fa fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm"
+                                        onclick="eliminarajax('{{ module.id }}', '{{ module.name }}', 'del_module', '', 'Delete')">
                                     <i class="fa fa-trash"></i>
-                                </a>
+                                </button>
                             </td>
                         </tr>
                     {% endfor %}
@@ -57,34 +61,11 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="moduleModal" tabindex="-1">
+
+    <!-- Modal -->
+    <div class="modal fade" id="moduleModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content" id="module-modal-content"></div>
         </div>
     </div>
-
-    <script>
-        function openModuleModal(action, id = null) {
-            bloqueointerface();
-             $.ajax({
-                type: "GET",
-                url: "'/module/'",
-                data: {'action':action,'id':id},
-                success: function (data) {
-                    if (data.result == 'success') {
-                        $(".modal-body", $("#modalVerDetalleCostosNivel")).html(data.html);
-                        $("#modalVerDetalleCostosNivel").modal({backdrop:'static', width: '90%'}).modal('show');
-                    } else {
-                        alertaWarning(data.message)
-                        $.unblockUI();
-                    }
-                },
-                error: function () {
-                    $.unblockUI();
-                    mensajeWarning('No se pudo conectar con el servidor. Intente de nuevo más tarde.')
-                },
-                dataType: "json",
-            });
-        }
-    </script>
 {% endblock %}

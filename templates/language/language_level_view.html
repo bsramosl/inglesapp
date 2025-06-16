@@ -1,55 +1,56 @@
 {% extends "layout/base.html" %}
-{% block heading %}
-{% endblock %}
-{% block tittle %}{{ tittle }}{% endblock %}
+{% load extras_tags %}
+{% block heading %}{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 {% block atras %}{% endblock %}
-
 {% block content %}
     <div class="container-fluid">
         <div class="card">
-            <!-- Cabecera de la tarjeta con botón de agregar -->
+            <!-- Cabecera del card -->
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="fw-bold mb-0">{{ title_table }}</h5>
-                <button onclick="formModalBase('', 'Add Module', 'create')"
+                <button onclick="formModalBase('', 'Add Level', 'create')"
                         class="btn btn-success action-add">
                     <i class="fa fa-plus me-1"></i> Add
                 </button>
             </div>
 
+            <!-- Cuerpo con la tabla -->
             <div class="card-body">
-                <!-- Tabla -->
-                <table class="table table-bordered table-hover table-striped w-100" id="example">
+                <table id="example" class="table table-bordered table-hover table-striped w-100">
                     <thead class="table-light">
                     <tr>
                         <th>ID</th>
+                        <th>Short Name</th>
                         <th>Name</th>
-                        <th>Name Key</th>
                         <th>Description</th>
+                        <th>Orden</th>
                         <th>Visible</th>
                         <th class="text-end">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {% for lists in list %}
+                    {% for module in modules %}
                         <tr>
-                            <td>{{ lists.id }}</td>
-                            <td>{{ lists.name }}</td>
-                            <td>{{ lists.name_key }}</td>
-                            <td>{{ lists.description }}</td>
+                            <td>{{ module.id }}</td>
+                            <td>{{ module.short_name }}</td>
+                            <td>{{ module.name }}</td>
+                            <td>{{ module.description }}</td>
+                            <td>{{ module.order }}</td>
                             <td>
-                                {% if lists.is_active %}
+                                {% if module.is_active %}
                                     <span class="badge bg-success">Yes</span>
                                 {% else %}
                                     <span class="badge bg-danger">No</span>
                                 {% endif %}
                             </td>
                             <td class="text-end">
-                                <button class="btn btn-sm btn-outline-primary"
-                                        onclick="formModalBase({{ lists.id }}, 'Edit Rol', 'edit')">
+                                <button class="btn btn-outline-primary btn-sm"
+                                        onclick="formModalBase({{ module.id }}, 'Edit Level', 'edit')">
                                     <i class="fa fa-edit"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger"
-                                        onclick="eliminarajax('{{ lists.id }}', '{{ module.name }}', 'del', '', 'Delete')">
+                                <button class="btn btn-outline-danger btn-sm"
+                                        onclick="eliminarajax('{{ module.id }}', '{{ module.name }}', 'del', '', 'Delete')">
                                     <i class="fa fa-trash"></i>
                                 </button>
                             </td>
@@ -61,11 +62,10 @@
         </div>
     </div>
 
-    <!-- Modal base -->
-    <div class="modal fade" id="moduleModal" tabindex="-1" aria-labelledby="moduleModalLabel" aria-hidden="true">
+    <!-- Modal -->
+    <div class="modal fade" id="moduleModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content" id="module-modal-content"></div>
         </div>
     </div>
-
 {% endblock %}

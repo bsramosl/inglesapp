@@ -5,16 +5,12 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.template.loader import get_template
 from django.views.decorators.csrf import csrf_exempt
-from docutils.nodes import status
-from django.core.cache import cache
-from app.forms import ModuleForm
-from app.models import Module
+from app.forms import LanguageForm
+from app.models import  Language
 from helpers.decorators import add_data
 
 @csrf_exempt
 @login_required(redirect_field_name='ret', login_url='/login')
-# @secure_module
-# @last_access
 @transaction.atomic()
 def view(request):
     data = {}
@@ -23,40 +19,37 @@ def view(request):
     if request.method == 'POST':
         action = request.POST['action']
 
-        if action == 'create_module':
+        if action == 'create':
             try:
-                form = ModuleForm(request.POST)
+                form = LanguageForm(request.POST)
                 if form.is_valid():
-                    Module.objects.create(**form.cleaned_data)
-                    cache.delete_pattern('menus_*')
-                    return JsonResponse({"result": True, "message": "Module created successfully."})
+                    Language.objects.create(**form.cleaned_data)
+                    return JsonResponse({"result": True, "message": "Created successfully."})
                 else:
                     return JsonResponse({"result": False, "message": "Invalid data.", "errors": form.errors})
             except Exception as ex:
                 return JsonResponse({"result": False, "message": f"Error: {ex}"})
 
-        if action == 'del_module':
+        if action == 'del':
             try:
                 id = request.POST.get('id', None)
-                module = Module.objects.get(pk=id)
+                module = Language.objects.get(pk=id)
                 module.status = False
                 module.save()
-                cache.delete_pattern('menus_*')
-                return JsonResponse({"result": True, "message": "Module delete successfully."})
+                return JsonResponse({"result": True, "message": "Delete successfully."})
             except Exception as ex:
                 return JsonResponse({"result": False, "mesagge": f"Error {ex}"})
 
-        if action == 'edit_module':
+        if action == 'edit':
             try:
                 id = request.POST.get('id', None)
-                module = Module.objects.get(pk=id)
-                form = ModuleForm(request.POST)
+                module = Language.objects.get(pk=id)
+                form = LanguageForm(request.POST)
                 if form.is_valid():
                     for field, value in form.cleaned_data.items():
                         setattr(module, field, value)
                     module.save()
-                    cache.delete_pattern('menus_*')
-                    return JsonResponse({"result": True, "message": "Module updated successfully."})
+                    return JsonResponse({"result": True, "message": "Updated successfully."})
                 else:
                     return JsonResponse({"result": False, "message": "Invalid form data.", "errors": form.errors})
             except Exception as ex:
@@ -67,29 +60,29 @@ def view(request):
         if 'action' in request.GET:
             action = request.GET['action']
 
-            if action == 'edit_module':
+            if action == 'edit':
                 try:
-                    data['title'] = u'Edit Modules'
+                    data['title'] = u'Edit Language'
                     data['id'] = id = request.GET.get('id',None)
-                    data['action'] = 'edit_module'
-                    module = Module.objects.get(pk=id)
-                    data['form'] =  ModuleForm(initial=model_to_dict(module))
+                    data['action'] = 'edit'
+                    module = Language.objects.get(pk=id)
+                    data['form'] =  LanguageForm(initial=model_to_dict(module))
                     template = get_template("layout/form.html")
                     json_content = template.render(data)
                     return JsonResponse({"result": True, 'data': json_content})
                 except Exception as ex:
                     return JsonResponse({"result": False, "mesagge": f"Error {ex}"})
 
-            if action == 'create_module':
-                data['title'] = u'Create Module'
-                data['form'] = ModuleForm()
-                data['action'] = 'create_module'
+            if action == 'create':
+                data['title'] = u'Create Language'
+                data['form'] = LanguageForm()
+                data['action'] = 'create'
                 template = get_template("layout/form.html")
                 json_content = template.render(data)
                 return JsonResponse({"result":True, "data":json_content})
         else:
-            data['tittle'] = u"Modules"
-            data['page_subtitle'] = u"Module Management"
-            data['title_table'] = u"Modules List"
-            data['modules'] = Module.objects.select_related('category').filter(status=True).all().order_by('category__order', 'order')
-            return render(request, "system/module_view.html", data)
+            data['tittle'] = u"Languages"
+            data['page_subtitle'] = u"Language Management"
+            data['title_table'] = u"Language List"
+            data['modules'] = Language.objects.filter(status=True).order_by('order')
+            return render(request, "language/language_view.html", data)

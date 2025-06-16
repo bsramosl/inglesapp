@@ -1,18 +1,25 @@
 import logging
 from django.core.cache import caches
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.utils import timezone
 from datetime import timedelta
-from django.contrib.auth import get_user_model, authenticate
-
+from django.contrib.auth import get_user_model, authenticate, user_logged_in, user_logged_out
 from app.models import Person, MultiAppToken, LoginAttempt
+import user_agents
 
 logger = logging.getLogger(__name__)
 cache = caches['default']
 User = get_user_model()
 
 class AuthService:
-    """Servicio completo de autenticación y gestión de sesiones"""
+
+    ERROR_INVALID_CREDENTIALS = "Credenciales inválidas"
+    ERROR_INACTIVE_USER = "Usuario inactivo"
+    ERROR_NO_PERSON = "Perfil de usuario no encontrado"
+    ERROR_NO_PROFILES = "No hay perfiles asignados"
+    ERROR_BLOCKED_ACCOUNT = "Cuenta temporalmente bloqueada"
 
     @staticmethod
     def get_client_ip(request):
@@ -49,18 +56,36 @@ class AuthService:
         return token
 
     @staticmethod
-    def record_successful_login(user, ip_address, app_name=settings.TITLE_SYSTEM):
+    def record_successful_login(user, ip_address, request=None, app_name=settings.TITLE_SYSTEM):
         AuthService.record_login_success(user, ip_address)
         token = AuthService.generate_app_token(user, app_name)
+
+        user_agent = None
+
+        if request:
+            ua = user_agents.parse(request.META.get('HTTP_USER_AGENT', ''))
+            user_agent = {
+                'device': ua.device.family,
+                'os': f"{ua.os.family} {ua.os.version_string}",
+                'browser': f"{ua.browser.family} {ua.browser.version_string}",
+                'is_mobile': ua.is_mobile,
+                'raw': request.META.get('HTTP_USER_AGENT', '')[:500]
+            }
+
         session_data = {
             'user_id': user.id,
             'ip': ip_address,
             'login_time': timezone.now().isoformat(),
-            'user_agent': None,
+            'user_agent': user_agent,
             'active_tokens': [token.key],
-            'current_app': app_name
+            'current_app': app_name,
+            'last_activity': timezone.now().isoformat()
         }
-        cache.set(f"user_session:{user.id}", session_data, timeout=settings.SESSION_COOKIE_AGE)
+
+        cache_key = f"user_session:{user.id}"
+        cache.set(cache_key,session_data,timeout=settings.SESSION_COOKIE_AGE)
+        if request:
+            user_logged_in.send(sender=user.__class__, request=request, user=user)
         return token
 
     @staticmethod
@@ -81,18 +106,25 @@ class AuthService:
     def validate_session(request):
         if not request.user.is_authenticated:
             return False
+        cache_key = f"user_session:{request.user.id}"
         session_data = cache.get(f"user_session:{request.user.id}")
         if not session_data:
             return False
         if settings.VALIDATE_SESSION_IP and session_data.get('ip') != AuthService.get_client_ip(request):
             logger.warning(f"IP mismatch for user {request.user.id}")
             return False
-        session_data['user_agent'] = request.META.get('HTTP_USER_AGENT')
-        cache.set(f"user_session:{request.user.id}", session_data, timeout=settings.SESSION_COOKIE_AGE)
+
+        session_data['last_activity'] = timezone.now().isoformat()
+        cache.set(cache_key, session_data, timeout=settings.SESSION_COOKIE_AGE)
+
         return True
 
-    def validate_user_credentials(username, password, ip_address):
-        username = username
+    def validate_user_credentials(username, password, ip_address, request=None):
+
+        if AuthService.is_login_blocked(username, 'user') or AuthService.is_login_blocked(ip_address, 'ip'):
+            logger.warning(f"Login bloqueado para usuario {username} desde IP {ip_address}")
+            raise PermissionDenied(AuthService.ERROR_BLOCKED_ACCOUNT)
+
         user = authenticate(username=username, password=password)
 
         if Person.objects.filter(user__username=username,status=True).exists() and user is None:
@@ -116,16 +148,16 @@ class AuthService:
         return user, persona, token
 
     @staticmethod
-    def record_login_success(user, ip_address):
-        user_key = f"login_attempts:user:{user.username}"
-        ip_key = f"login_attempts:ip:{ip_address}"
-        # Reinicia los contadores de intentos fallidos
-        cache.delete(user_key)
-        cache.delete(ip_key)
-        # Registra el intento exitoso
+    def record_login_success(user, ip_address, request=None):
+        cache.delete(f"login_attempts:user:{user.username}")
+        cache.delete(f"login_attempts:ip:{ip_address}")
+        user_agent = request.META.get('HTTP_USER_AGENT', '') if request else ''
+
         LoginAttempt.objects.create(
+            user=user,
             username=user.username,
             ip_address=ip_address,
+            user_agent=user_agent[:500],
             status=LoginAttempt.Status.SUCCESS
         )
 
@@ -137,12 +169,31 @@ class AuthService:
         return None
 
     @staticmethod
-    def logout_user(user_id, session_only=False):
-        cache.delete(f"user_session:{user_id}")
+    def logout_user(user_id,request=None, session_only=False):
+        cache_key = f"user_session:{user_id}"
+        session_data = cache.get(cache_key)
+        cache.delete(cache_key)
+
         if not session_only:
-            MultiAppToken.objects.filter(user_id=user_id, is_active=True).update(is_active=False)
-            for token in MultiAppToken.objects.filter(user_id=user_id):
-                cache.delete(f"token_validation:{token.key}")
-                cache.delete(f"user_tokens:{user_id}:{token.app_name}")
+            with transaction.atomic():
+                tokens = MultiAppToken.objects.filter(user_id=user_id, is_active=True)
+                for token in tokens:
+                    cache.delete(f"token_validation:{token.key}")
+                    cache.delete(f"user_tokens:{user_id}:{token.app_name}")
+                tokens.update(is_active=False)
+
+        if request:
+            try:
+                user = User.objects.get(id=user_id)
+                user_logged_out.send(sender=user.__class__, request=request, user=user)
+            except User.DoesNotExist:
+                pass
         return True
 
+    @staticmethod
+    def get_user_main_profile(user_id):
+        try:
+            person = Person.objects.select_related('user').get(user_id=user_id, status=True)
+            return person.main_profile()
+        except Person.DoesNotExist:
+            return None

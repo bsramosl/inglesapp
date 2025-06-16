@@ -40,17 +40,17 @@ class HybridLoginView(TemplateView):
 
 
 
-    def handle_success_response(self, request, persona,token):
+    def handle_success_response(self, request, person,token):
         try:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                perfiles = persona.my_profiles()
-                perfilprincipal = persona.main_profile()
+                perfiles = person.my_profiles()
+                perfilprincipal = person.main_profile()
                 request.session.set_expiry(240 * 60)
                 request.session['profiles'] = perfiles
-                request.session['person'] = persona
+                request.session['person'] = person
                 request.session['profilemain'] = perfilprincipal
                 # request.session['companybranchmain'] = perfilprincipal.profile.my_company_branches()[0]
-                url_redirect = request.POST.get('next', 'home/')
+                url_redirect = request.POST.get('next', '')
                 return JsonResponse({'result': 'success','session_id': request.session.session_key,'token': token.key,'expires': token.expires.isoformat(),'url_redirect': url_redirect})
             return self.render_error(request, 'Credenciales inválidas', status=401)
         except Exception as ex:

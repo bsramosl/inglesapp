@@ -1,0 +1,120 @@
+<script>
+    $(document).on('click', '#btnGuardarAccesos', function () {
+        const data = [];
+        $('input[name="groups"]:checked').each(function () {
+            const group_id = $(this).val();
+            data.push({
+                group_id: group_id,
+                can_view: $(`input[name="can_view_${group_id}"]`).is(':checked'),
+                can_edit: $(`input[name="can_edit_${group_id}"]`).is(':checked'),
+                can_delete: $(`input[name="can_delete_${group_id}"]`).is(':checked'),
+                can_manage: $(`input[name="can_manage_${group_id}"]`).is(':checked')
+            });
+        });
+
+        if (data.length === 0) {
+            mensajeDanger('Debes seleccionar al menos un grupo.');
+            return;
+        }
+        bloqueointerface()
+        $.ajax({
+            type: "POST",
+            url: window.location.pathname,
+            data: {
+                action: 'save_access_groups',
+                module_id: {{ id }},
+                config: JSON.stringify(data),
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function (resp) {
+                if (resp.result) {
+                    location.reload();
+                } else {
+                    $.unblockUI();
+                    mensajeDanger(resp.message);
+                }
+            },
+            error: function () {
+                mensajeDanger('Error al guardar los permisos.');
+                $.unblockUI();
+            }
+        });
+    });
+</script>
+
+<div class="modal-body">
+    <div class="row">
+        <div class="card">
+            <div class="card-header">
+                <div class="col-md-12 text-center">
+                    <label class="form-label"><strong>{{ module.name }}</strong></label>
+                </div>
+            </div>
+            <div class="card-body">
+                <label class="form-label"><strong>Groups</strong></label>
+                <div class="col-md-12">
+                    <table class="table table-responsive">
+                        <tbody>
+                        {% for group in groups_data %}
+                            <tr>
+                                <td>
+                                    <strong>{{ group.name }}</strong>
+                                </td>
+                                <td>
+                                    <span>{{ group.description }}</span>
+                                </td>
+                                <td>
+                                    <input type="checkbox"
+                                           id="switch_group_{{ group.id }}"
+                                           name="groups"
+                                           switch="bool"
+                                           value="{{ group.id }}"
+                                           {% if group.can_view or group.can_edit or group.can_delete or group.can_manage %}checked{% endif %}>
+                                    <label for="switch_group_{{ group.id }}"
+                                           data-on-label="Yes"
+                                           data-off-label="No"></label>
+                                </td>
+                                <td>
+                                    <div class="mt-2 ms-4 d-flex flex-wrap gap-3">
+                                        <div>
+                                            <input type="checkbox" class="form-check-input"
+                                                   name="can_view_{{ group.id }}"
+                                                   {% if group.can_view %}checked{% endif %}>
+                                            <label class="form-check-label">View</label>
+                                        </div>
+                                        <div>
+                                            <input type="checkbox" class="form-check-input"
+                                                   name="can_edit_{{ group.id }}"
+                                                   {% if group.can_edit %}checked{% endif %}>
+                                            <label class="form-check-label">Edit</label>
+                                        </div>
+                                        <div>
+                                            <input type="checkbox" class="form-check-input"
+                                                   name="can_delete_{{ group.id }}"
+                                                   {% if group.can_delete %}checked{% endif %}>
+                                            <label class="form-check-label">Delete</label>
+                                        </div>
+                                        <div>
+                                            <input type="checkbox" class="form-check-input"
+                                                   name="can_manage_{{ group.id }}"
+                                                   {% if group.can_manage %}checked{% endif %}>
+                                            <label class="form-check-label">Manage</label>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button class="btn btn-success" id="btnGuardarAccesos">Guardar</button>
+    <button class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+</div>
