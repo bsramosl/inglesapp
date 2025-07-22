@@ -201,12 +201,12 @@
                         <li class="menu-title" key="t-">{{ category.name }}</li>
                         <li>
                             <a href="javascript: void(0);" class="has-arrow waves-effect">
-                                <i class="bx bx-home-circle"></i>
+                                <i class="fa {{ category.icon }}"></i>
                                 <span key="t-{{ category.name }}">{{ category.name }}</span>
                             </a>
                             <ul class="sub-menu" aria-expanded="false">
                                 {% for module in category.modules %}
-                                    <li><a href="{{ module.url }}" key="t-{{ module.name }}">{{ module.name }}</a></li>
+                                    <li><a href="{{ module.url }}" key="t-{{ module.name }}">{{ module.name }} <i class="fa {{ module.icon }}"></i></a></li>
                                 {% endfor %}
                             </ul>
                         </li>

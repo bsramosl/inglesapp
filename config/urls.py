@@ -23,5 +23,7 @@ urlpatterns = static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += staticfiles_urlpatterns()
 urlpatterns += [
     re_path('admin/', admin.site.urls),
+    re_path(r'^api/', include('api.urls')),
     re_path(r'^', include('app.urls')),
+
 ]

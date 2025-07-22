@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.conf import settings
 import logging
+
+from rest_framework import serializers
+
 logger = logging.getLogger(__name__)
 class ModelBase(models.Model):
     status = models.BooleanField(default=True, verbose_name="Active")
@@ -61,3 +64,12 @@ class ModelBase(models.Model):
             'updated_at': self.updated_at,
             'is_active': self.is_active
         }
+
+
+
+
+class Helper_ModelSerializer(serializers.ModelSerializer):
+    display = serializers.SerializerMethodField()
+
+    def get_display(self, obj):
+        return obj.__str__() if obj.__str__() else None

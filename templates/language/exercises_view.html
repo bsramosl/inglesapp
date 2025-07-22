@@ -1,0 +1,100 @@
+{% extends "layout/base.html" %}
+{% load extras_tags %}
+{% block heading %}{% endblock %}
+{% block title %}{{ title }}{% endblock %}
+{% block atras %}{% endblock %}
+{% block content %}
+    <div class="container-fluid">
+        <div class="card">
+            <!-- Cabecera del card -->
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">{{ title_table }}</h5>
+                <button onclick="formModalBase('', 'Add Exercises', 'create')"
+                        class="btn btn-success action-add">
+                    <i class="fa fa-plus me-1"></i> Add
+                </button>
+            </div>
+
+            <!-- Cuerpo con la tabla -->
+            <div class="card-body">
+                <table id="example" class="table table-bordered table-hover table-striped w-100">
+                    <thead class="table-light">
+                    <tr>
+                        <th class="text-center">ID</th>
+                        <th class="text-center">Module</th>
+                        <th class="text-center">Content</th>
+                        <th class="text-center">Title</th>
+                        <th class="text-center">Description</th>
+                        <th class="text-center">Max Score</th>
+                        <th class="text-center">Order</th>
+                        <th class="text-center">Exercise Type</th>
+                        <th class="text-center">Difficulty</th>
+                        <th class="text-center">Time Limit</th>
+                        <th class="text-center">Visible</th>
+                        <th class="text-center">Premium</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for module in modules %}
+                        <tr>
+                            <td class="text-center">{{ module.id }}</td>
+                            <td class="text-center">{{ module.module }}</td>
+                            <td class="text-center">{{ module.content }}</td>
+                            <td class="text-center">{{ module.title }}</td>
+                            <td class="text-center">{{ module.description }}</td>
+                            <td class="text-center">{{ module.max_score }}</td>
+                            <td class="text-center">{{ module.order }}</td>
+                            <td class="text-center">{{ module.exercise_type }}</td>
+                            <td class="text-center">{{ module.difficulty }}</td>
+                            <td class="text-center">{{ module.time_limit }}</td>
+                            <td class="text-center">
+                                {% if module.is_active %}
+                                    <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-danger">No</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if module.is_premium %}
+                                    <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-danger">No</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <ul class="list-unstyled hstack gap-1 mb-0">
+                                    <li data-bs-toggle="tooltip" data-bs-placement="top" aria-label="View">
+                                        <a class="btn btn-sm btn-soft-primary"  href="{{request.path}}?action=question&id={{ module.id }}">
+                                            <i class="fa fa-question"></i>
+                                        </a>
+                                    </li>
+                                    <li data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Edit">
+                                        <a class="btn btn-sm btn-soft-info"
+                                                onclick="formModalBase({{ module.id }}, 'Edit Exercises', 'edit')">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                    </li>
+                                    <li data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Delete">
+                                        <a class="btn btn-sm btn-soft-danger"
+                                        onclick="eliminarajax('{{ module.id }}', '{{ module.name }}', 'del', '', 'Delete')">
+                                            <i class="fa fa-trash"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="moduleModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" id="module-modal-content"></div>
+        </div>
+    </div>
+{% endblock %}

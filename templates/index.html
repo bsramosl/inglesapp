@@ -5,4 +5,27 @@
 {% block atras %}{% endblock %}
 
 {% block content %}
+
+    <html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test CKEditor 5</title>
+    <script src="https://cdn.ckeditor.com/ckeditor5/45.2.0/super-build/ckeditor.js"></script>
+</head>
+<body>
+    <textarea class="ckeditor5"></textarea>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            ClassicEditor
+                .create(document.querySelector('.ckeditor5'), {
+                    toolbar: ['bold', 'italic', 'link'],
+                    language: 'es'
+                })
+                .catch(error => console.error(error));
+        });
+    </script>
+</body>
+</html>
+
 {% endblock %}

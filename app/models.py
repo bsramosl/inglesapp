@@ -11,8 +11,33 @@ from helpers.model_base import ModelBase
 def person_photo_path(instance, filename):
     return os.path.join('persons', instance.dni, filename)
 
+def company_path(instance, filename):
+    return os.path.join('persons', instance.dni, filename)
+
 def learning_content_path(instance, filename):
     return os.path.join('learning_content', str(instance.id), filename)
+
+class Company(ModelBase):
+    name = models.CharField(max_length=100, verbose_name='Company Name')
+    slogan = models.CharField(max_length=255, blank=True, verbose_name='Slogan')
+    description = models.TextField(blank=True, verbose_name='Short Description')
+    icon = models.ImageField(upload_to=company_path, verbose_name='Icon')
+    banner = models.ImageField(upload_to=company_path, verbose_name='Main Banner')
+    email = models.EmailField(blank=True, verbose_name='Contact Email')
+    phone = models.CharField(max_length=20, blank=True, verbose_name='Phone')
+    facebook = models.URLField(blank=True)
+    twitter = models.URLField(blank=True)
+    instagram = models.URLField(blank=True)
+    linkedin = models.URLField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Company'
+        verbose_name_plural = 'Companies'
+
+    def __str__(self):
+        return self.name
 
 class MultiAppToken(ModelBase):
     user = models.ForeignKey(User, related_name='tokens', on_delete=models.CASCADE, db_index=True)
@@ -98,6 +123,8 @@ class Module(ModelBase):
     order = models.PositiveIntegerField(default=0, db_index=True)
     is_active = models.BooleanField(default=True, db_index=True)
     needs_permission = models.BooleanField(default=True, db_index=True)
+    api = models.BooleanField(default=False, db_index=True)
+    authenticated = models.BooleanField(default=False, db_index=True)
 
     class Meta:
         verbose_name = 'Module'
@@ -341,286 +368,298 @@ class Level(ModelBase):
         return f"{self.language.code} - {self.name}"
 
 
-# class TopicCategory(ModelBase):
-#     language = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='topic_categories', db_index=True)
-#     name = models.CharField(max_length=100, db_index=True)
-#     description = models.TextField(blank=True)
-#     icon = models.CharField(max_length=50, blank=True, null=True)
-#     order = models.PositiveIntegerField(default=0, db_index=True)
-#     is_active = models.BooleanField(default=True, db_index=True)
-#
-#     class Meta:
-#         verbose_name = 'Topic Category'
-#         verbose_name_plural = 'Topic Categories'
-#         ordering = ['order']
-#
-#     def __str__(self):
-#         return f"{self.language.code} - {self.name}"
-#
-#
-# class LearningModule(ModelBase):
-#     level = models.ForeignKey(Level, on_delete=models.CASCADE, related_name='learning_modules', null=True, blank=True,db_index=True)
-#     topic_category = models.ForeignKey(TopicCategory, on_delete=models.CASCADE,related_name='learning_modules', null=True, blank=True, db_index=True)
-#     title = models.CharField(max_length=255, db_index=True)
-#     description = models.TextField(blank=True)
-#     thumbnail = models.ImageField(upload_to=learning_content_path, null=True, blank=True,storage=FileSystemStorage())
-#     order = models.PositiveIntegerField(default=0, db_index=True)
-#     is_active = models.BooleanField(default=True, db_index=True)
-#     estimated_duration = models.PositiveIntegerField(default=30, help_text="Duración estimada en minutos")
-#     is_premium = models.BooleanField(default=False, db_index=True)
-#
-#     class Meta:
-#         verbose_name = 'Learning Module'
-#         verbose_name_plural = 'Learning Modules'
-#         ordering = ['order']
-#         constraints = [models.CheckConstraint(check=models.Q(level__isnull=False) | models.Q(topic_category__isnull=False),name='learning_module_has_level_or_topic')]
-#
-#     def __str__(self):
-#         prefix = self.level.name if self.level else self.topic_category.name
-#         return f"{prefix} - {self.title}"
+class TopicCategory(ModelBase):
+    language = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='topic_categories', db_index=True)
+    name = models.CharField(max_length=100, db_index=True)
+    description = models.TextField(blank=True)
+    icon = models.CharField(max_length=50, blank=True, null=True)
+    order = models.PositiveIntegerField(default=0, db_index=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+
+    class Meta:
+        verbose_name = 'Topic Category'
+        verbose_name_plural = 'Topic Categories'
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.language.code} - {self.name}"
 #
 #
-# class LearningContent(ModelBase):
-#     CONTENT_TYPES = [
-#         ('vocabulary', 'Vocabulario'),
-#         ('grammar', 'Gramática'),
-#         ('pronunciation', 'Pronunciación'),
-#         ('culture', 'Cultura'),
-#         ('dialogue', 'Diálogo'),
-#         ('reading', 'Lectura'),
-#         ('listening', 'Escucha'),
-#     ]
-#
-#     module = models.ForeignKey(LearningModule, on_delete=models.CASCADE, related_name='contents', db_index=True)
-#     title = models.CharField(max_length=255, db_index=True)
-#     content_type = models.CharField(max_length=20, choices=CONTENT_TYPES, db_index=True)
-#     text_content = models.TextField(blank=True)
-#     audio = models.FileField(upload_to=learning_content_path, null=True, blank=True,storage=FileSystemStorage())
-#     image = models.ImageField(upload_to=learning_content_path, null=True, blank=True,storage=FileSystemStorage())
-#     video_url = models.URLField(blank=True)
-#     order = models.PositiveIntegerField(default=0, db_index=True)
-#     is_active = models.BooleanField(default=True, db_index=True)
-#     is_free = models.BooleanField(default=False, db_index=True)
-#
-#     class Meta:
-#         verbose_name = 'Learning Content'
-#         verbose_name_plural = 'Learning Contents'
-#         ordering = ['order']
-#
-#     def __str__(self):
-#         return f"{self.module.title} - {self.title}"
-#
-#
-# class Exercise(ModelBase):
-#     TYPE_CHOICES = [
-#         ('mcq', 'Opción múltiple'),
-#         ('fill_blank', 'Completar espacios'),
-#         ('drag_drop', 'Arrastrar y soltar'),
-#         ('match', 'Unir pares'),
-#         ('order', 'Ordenar secuencia'),
-#         ('speaking', 'Práctica de habla'),
-#         ('listening', 'Comprensión auditiva'),
-#         ('writing', 'Escritura'),
-#     ]
-#
-#     DIFFICULTY_CHOICES = [
-#         ('easy', 'Fácil'),
-#         ('medium', 'Medio'),
-#         ('hard', 'Difícil'),
-#     ]
-#
-#     module = models.ForeignKey(LearningModule, on_delete=models.CASCADE, related_name='exercises', db_index=True)
-#     content = models.ForeignKey(LearningContent, on_delete=models.SET_NULL,null=True, blank=True, related_name='exercises', db_index=True)
-#     title = models.CharField(max_length=255, db_index=True)
-#     description = models.TextField(blank=True)
-#     max_score = models.PositiveIntegerField(default=100)
-#     order = models.PositiveIntegerField(default=0, db_index=True)
-#     exercise_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='mcq', db_index=True)
-#     difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='medium', db_index=True)
-#     is_active = models.BooleanField(default=True, db_index=True)
-#     time_limit = models.PositiveIntegerField(null=True, blank=True,help_text="Límite de tiempo en segundos (opcional)")
-#     is_premium = models.BooleanField(default=False, db_index=True)
-#
-#     class Meta:
-#         verbose_name = 'Exercise'
-#         verbose_name_plural = 'Exercises'
-#         ordering = ['order']
-#
-#     def __str__(self):
-#         return f"{self.module.title} - {self.title}"
-#
-#
-# class Question(ModelBase):
-#     exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE, related_name='questions', db_index=True)
-#     text = models.TextField(blank=True)  # Pregunta o texto base
-#     audio = models.FileField(upload_to=learning_content_path, null=True, blank=True,storage=FileSystemStorage())
-#     image = models.ImageField(upload_to=learning_content_path, null=True, blank=True,storage=FileSystemStorage())
-#     explanation = models.TextField(blank=True)
-#     order = models.PositiveIntegerField(default=0, db_index=True)
-#     points = models.PositiveIntegerField(default=10)
-#
-#     class Meta:
-#         verbose_name = 'Question'
-#         verbose_name_plural = 'Questions'
-#         ordering = ['order']
-#
-#     def __str__(self):
-#         return f"Q{self.order} - {self.exercise.title}"
-#
-#
-# class Choice(ModelBase):
-#     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='choices', db_index=True)
-#     text = models.CharField(max_length=255)
-#     is_correct = models.BooleanField(default=False, db_index=True)
-#     feedback = models.CharField(max_length=255, blank=True)
-#
-#     class Meta:
-#         verbose_name = 'Choice'
-#         verbose_name_plural = 'Choices'
-#
-#     def __str__(self):
-#         return f"Choice for Q{self.question.id}: {self.text}"
-#
-#
-# class ExamSimulator(ModelBase):
-#     name = models.CharField(max_length=255, db_index=True)
-#     language = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='exam_simulators', db_index=True)
-#     level = models.ForeignKey(Level, on_delete=models.CASCADE, related_name='exam_simulators', db_index=True)
-#     description = models.TextField(blank=True)
-#     duration = models.PositiveIntegerField(help_text="Duración en minutos")
-#     passing_score = models.PositiveIntegerField(default=70)
-#     attempts_allowed = models.PositiveIntegerField(default=3)
-#     is_active = models.BooleanField(default=True, db_index=True)
-#     is_premium = models.BooleanField(default=False, db_index=True)
-#     thumbnail = models.ImageField(upload_to=learning_content_path, null=True, blank=True,storage=FileSystemStorage())
-#
-#     class Meta:
-#         verbose_name = 'Exam Simulator'
-#         verbose_name_plural = 'Exam Simulators'
-#
-#     def __str__(self):
-#         return f"{self.name} ({self.level.short_name})"
-#
-#
-# class UserLanguageProgress(ModelBase):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='language_progress', db_index=True)
-#     person = models.ForeignKey('Person', on_delete=models.CASCADE, related_name='language_progress', db_index=True)
-#     language = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='user_progress', db_index=True)
-#     current_level = models.ForeignKey(Level, on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
-#     daily_goal = models.PositiveIntegerField(default=20, help_text="Minutos diarios objetivo")
-#     streak = models.PositiveIntegerField(default=0, help_text="Días consecutivos aprendiendo")
-#     last_active = models.DateField(null=True, blank=True, db_index=True)
-#     total_xp = models.PositiveIntegerField(default=0, help_text="Experiencia total acumulada")
-#     total_time_spent = models.PositiveIntegerField(default=0, help_text="Tiempo total en minutos")
-#
-#     class Meta:
-#         verbose_name = 'User Language Progress'
-#         verbose_name_plural = 'User Language Progresses'
-#         unique_together = ('user', 'language')
-#
-#     def __str__(self):
-#         return f"{self.user.username} - {self.language.name} progress"
-#
-#
-# class UserModuleProgress(ModelBase):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='module_progress', db_index=True)
-#     person = models.ForeignKey('Person', on_delete=models.CASCADE, related_name='module_progress', db_index=True)
-#     module = models.ForeignKey(LearningModule, on_delete=models.CASCADE, related_name='user_progress', db_index=True)
-#     completed = models.BooleanField(default=False, db_index=True)
-#     completion_date = models.DateTimeField(null=True, blank=True, db_index=True)
-#     score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-#     attempts = models.PositiveIntegerField(default=0)
-#     time_spent = models.PositiveIntegerField(default=0, help_text="Tiempo en minutos")
-#
-#     class Meta:
-#         verbose_name = 'User Module Progress'
-#         verbose_name_plural = 'User Module Progresses'
-#         unique_together = ('user', 'module')
-#
-#     def __str__(self):
-#         return f"{self.user.username} - {self.module.title} progress"
-#
-#
-# class UserExerciseAttempt(ModelBase):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='exercise_attempts', db_index=True)
-#     person = models.ForeignKey('Person', on_delete=models.CASCADE, related_name='exercise_attempts', db_index=True)
-#     exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE, related_name='attempts', db_index=True)
-#     start_time = models.DateTimeField(auto_now_add=True)
-#     end_time = models.DateTimeField(null=True, blank=True, db_index=True)
-#     score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-#     completed = models.BooleanField(default=False, db_index=True)
-#     time_spent = models.PositiveIntegerField(default=0, help_text="Tiempo en segundos")
-#
-#     class Meta:
-#         verbose_name = 'User Exercise Attempt'
-#         verbose_name_plural = 'User Exercise Attempts'
-#
-#     def __str__(self):
-#         return f"{self.user.username} - {self.exercise.title} attempt"
-#
-#
-# class UserExamAttempt(ModelBase):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='exam_attempts', db_index=True)
-#     person = models.ForeignKey('Person', on_delete=models.CASCADE, related_name='exam_attempts', db_index=True)
-#     exam = models.ForeignKey(ExamSimulator, on_delete=models.CASCADE, related_name='attempts', db_index=True)
-#     start_time = models.DateTimeField(auto_now_add=True)
-#     end_time = models.DateTimeField(null=True, blank=True, db_index=True)
-#     score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-#     passed = models.BooleanField(default=False, db_index=True)
-#     completed = models.BooleanField(default=False, db_index=True)
-#     time_spent = models.PositiveIntegerField(default=0, help_text="Tiempo en minutos")
-#
-#     class Meta:
-#         verbose_name = 'User Exam Attempt'
-#         verbose_name_plural = 'User Exam Attempts'
-#
-#     def __str__(self):
-#         return f"{self.user.username} - {self.exam.name} attempt"
-#
-#
-# class UserDailyGoal(ModelBase):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='daily_goals', db_index=True)
-#     person = models.ForeignKey('Person', on_delete=models.CASCADE, related_name='daily_goals', db_index=True)
-#     date = models.DateField(db_index=True)
-#     minutes_completed = models.PositiveIntegerField(default=0)
-#     goal_achieved = models.BooleanField(default=False, db_index=True)
-#     xp_earned = models.PositiveIntegerField(default=0)
-#
-#     class Meta:
-#         verbose_name = 'User Daily Goal'
-#         verbose_name_plural = 'User Daily Goals'
-#         unique_together = ('user', 'date')
-#
-#     def __str__(self):
-#         return f"{self.user.username} - {self.date} goal"
-#
-#
-# class Achievement(ModelBase):
-#     name = models.CharField(max_length=100, db_index=True)
-#     description = models.TextField()
-#     icon = models.CharField(max_length=50)
-#     xp_reward = models.PositiveIntegerField(default=0)
-#     is_active = models.BooleanField(default=True, db_index=True)
-#
-#     class Meta:
-#         verbose_name = 'Achievement'
-#         verbose_name_plural = 'Achievements'
-#
-#     def __str__(self):
-#         return self.name
-#
-#
-# class UserAchievement(ModelBase):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='achievements', db_index=True)
-#     person = models.ForeignKey('Person', on_delete=models.CASCADE, related_name='achievements', db_index=True)
-#     achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE, related_name='user_achievements',db_index=True)
-#     date_unlocked = models.DateTimeField(auto_now_add=True)
-#     notified = models.BooleanField(default=False, db_index=True)
-#
-#     class Meta:
-#         verbose_name = 'User Achievement'
-#         verbose_name_plural = 'User Achievements'
-#         unique_together = ('user', 'achievement')
-#
-#     def __str__(self):
-#         return f"{self.user.username} - {self.achievement.name}"
+class LearningModule(ModelBase):
+    level = models.ForeignKey(Level, on_delete=models.CASCADE, related_name='learning_modules', null=True, blank=True,db_index=True)
+    topic_category = models.ForeignKey(TopicCategory, on_delete=models.CASCADE,related_name='learning_modules', null=True, blank=True, db_index=True)
+    title = models.CharField(max_length=255, db_index=True)
+    description = models.TextField(blank=True)
+    thumbnail = models.ImageField(upload_to=learning_content_path, null=True, blank=True,storage=FileSystemStorage())
+    order = models.PositiveIntegerField(default=0, db_index=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    estimated_duration = models.PositiveIntegerField(default=30, help_text="Estimated duration in minutes")
+    is_premium = models.BooleanField(default=False, db_index=True)
+
+    class Meta:
+        verbose_name = 'Learning Module'
+        verbose_name_plural = 'Learning Modules'
+        ordering = ['order']
+        constraints = [models.CheckConstraint(check=models.Q(level__isnull=False) | models.Q(topic_category__isnull=False),name='learning_module_has_level_or_topic')]
+
+    def __str__(self):
+        prefix = self.level.name if self.level else self.topic_category.name
+        return f"{prefix} - {self.title}"
+
+
+class LearningContent(ModelBase):
+    CONTENT_TYPES = [
+        ('vocabulary', 'Vocabulario'),
+        ('grammar', 'Gramática'),
+        ('pronunciation', 'Pronunciación'),
+        ('culture', 'Cultura'),
+        ('dialogue', 'Diálogo'),
+        ('reading', 'Lectura'),
+        ('listening', 'Escucha'),
+    ]
+
+    module = models.ForeignKey(LearningModule, on_delete=models.CASCADE, related_name='contents', db_index=True)
+    title = models.CharField(max_length=255, db_index=True)
+    content_type = models.CharField(max_length=20, choices=CONTENT_TYPES, db_index=True)
+    text_content = models.TextField(blank=True)
+    audio = models.FileField(upload_to=learning_content_path, null=True, blank=True,storage=FileSystemStorage())
+    image = models.ImageField(upload_to=learning_content_path, null=True, blank=True,storage=FileSystemStorage())
+    video_url = models.URLField(blank=True)
+    order = models.PositiveIntegerField(default=0, db_index=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    is_free = models.BooleanField(default=False, db_index=True)
+
+    class Meta:
+        verbose_name = 'Learning Content'
+        verbose_name_plural = 'Learning Contents'
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.module.title} - {self.title}"
+
+
+class Exercise(ModelBase):
+    TYPE_CHOICES = [
+        ('quiz', 'Quiz estándar'),
+        ('speaking_session', 'Sesión de práctica de habla'),
+        ('listening_session', 'Sesión de comprensión auditiva'),
+        ('writing_assignment', 'Asignación de escritura'),
+    ]
+
+    DIFFICULTY_CHOICES = [
+        ('easy', 'Fácil'),
+        ('medium', 'Medio'),
+        ('hard', 'Difícil'),
+    ]
+
+    module = models.ForeignKey(LearningModule, on_delete=models.CASCADE, related_name='exercises', db_index=True)
+    content = models.ForeignKey(LearningContent, on_delete=models.SET_NULL,null=True, blank=True, related_name='exercises', db_index=True)
+    title = models.CharField(max_length=255, db_index=True)
+    description = models.TextField(blank=True)
+    max_score = models.PositiveIntegerField(default=100)
+    order = models.PositiveIntegerField(default=0, db_index=True)
+    exercise_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='mcq', db_index=True)
+    difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='medium', db_index=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    time_limit = models.PositiveIntegerField(null=True, blank=True,help_text="Límite de tiempo en segundos (opcional)")
+    is_premium = models.BooleanField(default=False, db_index=True)
+
+    class Meta:
+        verbose_name = 'Exercise'
+        verbose_name_plural = 'Exercises'
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.module.title} - {self.title}"
+
+
+class Question(ModelBase):
+    QUESTION_TYPE_CHOICES = [
+        ('mcq', 'Opción múltiple'),
+        ('fill_blank', 'Completar espacios'),
+        ('drag_drop_text', 'Arrastrar y soltar (Texto)'),
+        ('drag_drop_image', 'Arrastrar y soltar (Imagen)'),
+        ('match', 'Unir pares'),
+        ('order_sequence', 'Ordenar secuencia'),
+        ('short_answer', 'Respuesta corta'),
+        ('essay', 'Ensayo'),
+        ('true_false', 'Verdadero/Falso'),
+        ('numerical', 'Numérica'),
+    ]
+    exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE, related_name='questions', db_index=True)
+    question_type = models.CharField(max_length=20, choices=QUESTION_TYPE_CHOICES, default='mcq', db_index=True)
+    text = models.TextField(blank=True)
+    audio = models.FileField(upload_to=learning_content_path, null=True, blank=True,storage=FileSystemStorage())
+    image = models.ImageField(upload_to=learning_content_path, null=True, blank=True,storage=FileSystemStorage())
+    explanation = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0, db_index=True)
+    points = models.PositiveIntegerField(default=10)
+
+    class Meta:
+        verbose_name = 'Question'
+        verbose_name_plural = 'Questions'
+        ordering = ['order']
+
+    def __str__(self):
+        return f"Q{self.order} - {self.exercise.title} ({self.get_question_type_display()})"
+
+    def get_choices(self):
+        return Choice.objects.filter(question=self)
+
+
+class Choice(ModelBase):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='choices', db_index=True)
+    text = models.CharField(max_length=255)
+    is_correct = models.BooleanField(default=False, db_index=True)
+    feedback = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        verbose_name = 'Choice'
+        verbose_name_plural = 'Choices'
+
+    def __str__(self):
+        return f"Choice for Q{self.question.id}: {self.text}"
+
+
+class ExamSimulator(ModelBase):
+    name = models.CharField(max_length=255, db_index=True)
+    language = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='exam_simulators', db_index=True)
+    level = models.ForeignKey(Level, on_delete=models.CASCADE, related_name='exam_simulators', db_index=True)
+    description = models.TextField(blank=True)
+    duration = models.PositiveIntegerField(help_text="Duración en minutos")
+    passing_score = models.PositiveIntegerField(default=70)
+    attempts_allowed = models.PositiveIntegerField(default=3)
+    is_active = models.BooleanField(default=True, db_index=True)
+    is_premium = models.BooleanField(default=False, db_index=True)
+    thumbnail = models.ImageField(upload_to=learning_content_path, null=True, blank=True,storage=FileSystemStorage())
+
+    class Meta:
+        verbose_name = 'Exam Simulator'
+        verbose_name_plural = 'Exam Simulators'
+
+    def __str__(self):
+        return f"{self.name} ({self.level.short_name})"
+
+
+class UserLanguageProgress(ModelBase):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='language_progress', db_index=True)
+    person = models.ForeignKey('Person', on_delete=models.CASCADE, related_name='language_progress', db_index=True)
+    language = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='user_progress', db_index=True)
+    current_level = models.ForeignKey(Level, on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
+    daily_goal = models.PositiveIntegerField(default=20, help_text="Minutos diarios objetivo")
+    streak = models.PositiveIntegerField(default=0, help_text="Días consecutivos aprendiendo")
+    last_active = models.DateField(null=True, blank=True, db_index=True)
+    total_xp = models.PositiveIntegerField(default=0, help_text="Experiencia total acumulada")
+    total_time_spent = models.PositiveIntegerField(default=0, help_text="Tiempo total en minutos")
+
+    class Meta:
+        verbose_name = 'User Language Progress'
+        verbose_name_plural = 'User Language Progresses'
+        unique_together = ('user', 'language')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.language.name} progress"
+
+
+class UserModuleProgress(ModelBase):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='module_progress', db_index=True)
+    person = models.ForeignKey('Person', on_delete=models.CASCADE, related_name='module_progress', db_index=True)
+    module = models.ForeignKey(LearningModule, on_delete=models.CASCADE, related_name='user_progress', db_index=True)
+    completed = models.BooleanField(default=False, db_index=True)
+    completion_date = models.DateTimeField(null=True, blank=True, db_index=True)
+    score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    attempts = models.PositiveIntegerField(default=0)
+    time_spent = models.PositiveIntegerField(default=0, help_text="Tiempo en minutos")
+
+    class Meta:
+        verbose_name = 'User Module Progress'
+        verbose_name_plural = 'User Module Progresses'
+        unique_together = ('user', 'module')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.module.title} progress"
+
+
+class UserExerciseAttempt(ModelBase):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='exercise_attempts', db_index=True)
+    person = models.ForeignKey('Person', on_delete=models.CASCADE, related_name='exercise_attempts', db_index=True)
+    exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE, related_name='attempts', db_index=True)
+    start_time = models.DateTimeField(auto_now_add=True)
+    end_time = models.DateTimeField(null=True, blank=True, db_index=True)
+    score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    completed = models.BooleanField(default=False, db_index=True)
+    time_spent = models.PositiveIntegerField(default=0, help_text="Tiempo en segundos")
+
+    class Meta:
+        verbose_name = 'User Exercise Attempt'
+        verbose_name_plural = 'User Exercise Attempts'
+
+    def __str__(self):
+        return f"{self.user.username} - {self.exercise.title} attempt"
+
+
+class UserExamAttempt(ModelBase):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='exam_attempts', db_index=True)
+    person = models.ForeignKey('Person', on_delete=models.CASCADE, related_name='exam_attempts', db_index=True)
+    exam = models.ForeignKey(ExamSimulator, on_delete=models.CASCADE, related_name='attempts', db_index=True)
+    start_time = models.DateTimeField(auto_now_add=True)
+    end_time = models.DateTimeField(null=True, blank=True, db_index=True)
+    score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    passed = models.BooleanField(default=False, db_index=True)
+    completed = models.BooleanField(default=False, db_index=True)
+    time_spent = models.PositiveIntegerField(default=0, help_text="Tiempo en minutos")
+
+    class Meta:
+        verbose_name = 'User Exam Attempt'
+        verbose_name_plural = 'User Exam Attempts'
+
+    def __str__(self):
+        return f"{self.user.username} - {self.exam.name} attempt"
+
+
+class UserDailyGoal(ModelBase):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='daily_goals', db_index=True)
+    person = models.ForeignKey('Person', on_delete=models.CASCADE, related_name='daily_goals', db_index=True)
+    date = models.DateField(db_index=True)
+    minutes_completed = models.PositiveIntegerField(default=0)
+    goal_achieved = models.BooleanField(default=False, db_index=True)
+    xp_earned = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = 'User Daily Goal'
+        verbose_name_plural = 'User Daily Goals'
+        unique_together = ('user', 'date')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.date} goal"
+
+
+class Achievement(ModelBase):
+    name = models.CharField(max_length=100, db_index=True)
+    description = models.TextField()
+    icon = models.CharField(max_length=50)
+    xp_reward = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True, db_index=True)
+
+    class Meta:
+        verbose_name = 'Achievement'
+        verbose_name_plural = 'Achievements'
+
+    def __str__(self):
+        return self.name
+
+
+class UserAchievement(ModelBase):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='achievements', db_index=True)
+    person = models.ForeignKey('Person', on_delete=models.CASCADE, related_name='achievements', db_index=True)
+    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE, related_name='user_achievements',db_index=True)
+    date_unlocked = models.DateTimeField(auto_now_add=True)
+    notified = models.BooleanField(default=False, db_index=True)
+
+    class Meta:
+        verbose_name = 'User Achievement'
+        verbose_name_plural = 'User Achievements'
+        unique_together = ('user', 'achievement')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.achievement.name}"

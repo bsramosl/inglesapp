@@ -8,6 +8,7 @@ MY_INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'app',
+    'api',
 ]
 
 MY_SIMPLE_JWT = {
@@ -35,5 +36,8 @@ MY_SIMPLE_JWT = {
 MY_REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.AllowAny',
     )
 }

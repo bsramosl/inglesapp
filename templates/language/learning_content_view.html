@@ -1,5 +1,5 @@
 {% extends "layout/base.html" %}
-
+{% load extras_tags %}
 {% block heading %}{% endblock %}
 {% block title %}{{ title }}{% endblock %}
 {% block atras %}{% endblock %}
@@ -9,7 +9,7 @@
             <!-- Cabecera del card -->
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="fw-bold mb-0">{{ title_table }}</h5>
-                <button onclick="formModalBase('', 'Add Module', 'create_module')"
+                <button onclick="formModalBase('', 'Add Learning Content', 'create')"
                         class="btn btn-success action-add">
                     <i class="fa fa-plus me-1"></i> Add
                 </button>
@@ -20,53 +20,45 @@
                 <table id="example" class="table table-bordered table-hover table-striped w-100">
                     <thead class="table-light">
                     <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Descripción</th>
-                        <th>URL</th>
-                        <th>Orden</th>
-                        <th>Visible</th>
-                        <th>Api</th>
-                        <th>Authenticated</th>
-                        <th class="text-end">Acciones</th>
+                        <th class="text-center">ID</th>
+                        <th class="text-center">Module</th>
+                        <th class="text-center">Title</th>
+                        <th class="text-center">Content Type</th>
+                        <th class="text-center">Text Content</th>
+                        <th class="text-center">Audio</th>
+                        <th class="text-center">Image</th>
+                        <th class="text-center">Video</th>
+                        <th class="text-center">Order</th>
+                        <th class="text-center">Visible</th>
+                        <th class="text-center">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
                     {% for module in modules %}
                         <tr>
-                            <td>{{ module.id }}</td>
-                            <td>{{ module.name }}</td>
-                            <td>{{ module.description }}</td>
-                            <td>{{ module.url }}</td>
-                            <td>{{ module.order }}</td>
-                            <td>
+                            <td class="text-center">{{ module.id }}</td>
+                            <td class="text-center">{{ module.module }}</td>
+                            <td class="text-center">{{ module.title }}</td>
+                            <td class="text-center">{{ module.content_type }}</td>
+                            <td class="text-center">{{ module.text_content }}</td>
+                            <td class="text-center">{{ module.audio }}</td>
+                            <td class="text-center">{{ module.image }}</td>
+                            <td class="text-center">{{ module.video_url }}</td>
+                            <td class="text-center">{{ module.order }}</td>
+                            <td class="text-center">
                                 {% if module.is_active %}
                                     <span class="badge bg-success">Yes</span>
                                 {% else %}
                                     <span class="badge bg-danger">No</span>
                                 {% endif %}
                             </td>
-                            <td>
-                                {% if module.api %}
-                                    <span class="badge bg-success">Yes</span>
-                                {% else %}
-                                    <span class="badge bg-danger">No</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if module.authenticated %}
-                                    <span class="badge bg-success">Yes</span>
-                                {% else %}
-                                    <span class="badge bg-danger">No</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-end">
+                            <td class="text-center">
                                 <button class="btn btn-outline-primary btn-sm"
-                                        onclick="formModalBase({{ module.id }}, 'Editar Módulo', 'edit_module')">
+                                        onclick="formModalBase({{ module.id }}, 'Edit Learning Content', 'edit')">
                                     <i class="fa fa-edit"></i>
                                 </button>
                                 <button class="btn btn-outline-danger btn-sm"
-                                        onclick="eliminarajax('{{ module.id }}', '{{ module.name }}', 'del_module', '', 'Delete')">
+                                        onclick="eliminarajax('{{ module.id }}', '{{ module.name }}', 'del', '', 'Delete')">
                                     <i class="fa fa-trash"></i>
                                 </button>
                             </td>

@@ -1,0 +1,129 @@
+<form method="post" id="question-form" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="modal-header">
+        <h5 class="modal-title" id="formModalLabel">{{ title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+
+    <div class="modal-body">
+        <div class="row g-3">
+            <!-- Campos generales -->
+            <div class="col-md-6">{{ form.exercise.label_tag }} {{ form.exercise }}</div>
+            <div class="col-md-6">{{ form.question_type.label_tag }} {{ form.question_type }}</div>
+            <div class="col-md-12">{{ form.text.label_tag }} {{ form.text }}</div>
+
+            <div class="col-md-6 audio-field">{{ form.audio.label_tag }} {{ form.audio }}</div>
+            <div class="col-md-6 image-field">{{ form.image.label_tag }} {{ form.image }}</div>
+
+            <div class="col-md-12">{{ form.explanation.label_tag }} {{ form.explanation }}</div>
+            <div class="col-md-4">{{ form.order.label_tag }} {{ form.order }}</div>
+            <div class="col-md-4">{{ form.points.label_tag }} {{ form.points }}</div>
+
+            <!-- Formset de opciones (Choices) -->
+            <div id="choices-container" class="col-md-12">
+                <hr>
+                <h5>Choices</h5>
+                {{ formset.management_form }}
+                {% for formset_form in formset %}
+                    <div class="choice-form row g-2 mb-2 p-2 border rounded bg-light">
+                        {% for hidden in formset_form.hidden_fields %}{{ hidden }}{% endfor %}
+                        <div class="col-md-8">{{ formset_form.text.label_tag }} {{ formset_form.text }}</div>
+                        <div class="col-md-2 d-flex align-items-center justify-content-center">
+                            <div class="form-check form-switch">
+                                {{ formset_form.is_correct.label_tag }}
+                                {{ formset_form.is_correct }}
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-center justify-content-center">
+                            {% if formset_form.instance.pk %}
+                                {{ formset_form.DELETE }}
+                                <label for="{{ formset_form.DELETE.id_for_label }}" class="ms-2 text-danger">Delete</label>
+                            {% else %}
+                                <button type="button" class="btn btn-danger btn-sm remove-choice-btn">Remove</button>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-12">{{ formset_form.feedback.label_tag }} {{ formset_form.feedback }}</div>
+                    </div>
+                {% endfor %}
+                <button type="button" id="add-choice-btn" class="btn btn-sm btn-outline-primary mt-2">Add another choice</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Save changes</button>
+    </div>
+</form>
+
+<script>
+$(document).ready(function() {
+    const questionTypeSelect = $('#id_question_type');
+    const choicesContainer = $('#choices-container');
+    const totalForms = $('#id_form-TOTAL_FORMS');
+    const formsetContainer = choicesContainer;
+
+    function toggleChoicesContainer() {
+        const selectedType = questionTypeSelect.val();
+        if (['mcq', 'true_false'].includes(selectedType)) {
+            choicesContainer.show();
+        } else {
+            choicesContainer.hide();
+        }
+    }
+    toggleChoicesContainer();
+    questionTypeSelect.on('change', toggleChoicesContainer);
+
+    // Agregar nueva opción
+    $('#add-choice-btn').on('click', function() {
+        let currentFormCount = parseInt(totalForms.val());
+        let newForm = formsetContainer.find('.choice-form:first').clone(false);
+
+        // Limpiar valores en el clon
+        newForm.find(':input').each(function() {
+            let type = $(this).attr('type');
+            if(type === 'checkbox' || type === 'radio') {
+                $(this).prop('checked', false);
+            } else {
+                $(this).val('');
+            }
+        });
+
+        // Actualizar índices (name, id, for)
+        newForm.find(':input, label').each(function() {
+            if(this.name) this.name = this.name.replace(/form-(\d+)-/, `form-${currentFormCount}-`);
+            if(this.id) this.id = this.id.replace(/form_(\d+)_/, `form_${currentFormCount}_`);
+            if(this.htmlFor) this.htmlFor = this.htmlFor.replace(/form_(\d+)_/, `form_${currentFormCount}_`);
+        });
+
+        // Quitar el checkbox DELETE si existe y botones previos de remove
+        newForm.find('input[type="checkbox"][id$="-DELETE"]').remove();
+        newForm.find('.remove-choice-btn').remove();
+
+        // Agregar botón remover
+        newForm.find('.col-md-2.d-flex.align-items-center.justify-content-center').append(
+            '<button type="button" class="btn btn-danger btn-sm remove-choice-btn">Remove</button>'
+        );
+
+        formsetContainer.append(newForm);
+        totalForms.val(currentFormCount + 1);
+    });
+
+    // Remover opción
+    formsetContainer.on('click', '.remove-choice-btn', function() {
+        let formToRemove = $(this).closest('.choice-form');
+        let deleteCheckbox = formToRemove.find('input[type="checkbox"][id$="-DELETE"]');
+
+        if(deleteCheckbox.length) {
+            deleteCheckbox.prop('checked', true);
+            formToRemove.hide();
+        } else {
+            formToRemove.remove();
+            // Decrementar contador de forms
+            let currentFormCount = parseInt(totalForms.val());
+            totalForms.val(currentFormCount - 1);
+        }
+    });
+});
+</script>

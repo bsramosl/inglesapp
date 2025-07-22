@@ -20,31 +20,33 @@
                 <table id="example" class="table table-bordered table-hover table-striped w-100">
                     <thead class="table-light">
                     <tr>
-                        <th>ID</th>
-                        <th>Short Name</th>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th>Orden</th>
-                        <th>Visible</th>
-                        <th class="text-end">Actions</th>
+                        <th class="text-center">ID</th>
+                        <th class="text-center">Short Name</th>
+                        <th class="text-center">Name</th>
+                        <th class="text-center">Description</th>
+                        <th class="text-center">Orden</th>
+                        <th class="text-center">Thumbnail</th>
+                        <th class="text-center">Visible</th>
+                        <th class="text-center">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
                     {% for module in modules %}
                         <tr>
-                            <td>{{ module.id }}</td>
-                            <td>{{ module.short_name }}</td>
-                            <td>{{ module.name }}</td>
-                            <td>{{ module.description }}</td>
-                            <td>{{ module.order }}</td>
-                            <td>
+                            <td class="text-center">{{ module.id }}</td>
+                            <td class="text-center">{{ module.short_name }}</td>
+                            <td class="text-center">{{ module.name }}</td>
+                            <td class="text-center">{{ module.description }}</td>
+                            <td class="text-center">{{ module.order }}</td>
+                            <td class="text-center">{{ module.thumbnail }}</td>
+                            <td class="text-center">
                                 {% if module.is_active %}
                                     <span class="badge bg-success">Yes</span>
                                 {% else %}
                                     <span class="badge bg-danger">No</span>
                                 {% endif %}
                             </td>
-                            <td class="text-end">
+                            <td class="text-center">
                                 <button class="btn btn-outline-primary btn-sm"
                                         onclick="formModalBase({{ module.id }}, 'Edit Level', 'edit')">
                                     <i class="fa fa-edit"></i>
